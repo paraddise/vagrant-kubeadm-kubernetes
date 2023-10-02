@@ -45,24 +45,23 @@ EOF
 
 sudo sysctl --system
 
-cat <<EOF | sudo tee /etc/apt/sources.list.d/devel:kubic:libcontainers:stable.list
-deb https://download.opensuse.org/repositories/devel:/kubic:/libcontainers:/stable/$OS/ /
-EOF
-cat <<EOF | sudo tee /etc/apt/sources.list.d/devel:kubic:libcontainers:stable:cri-o:$VERSION.list
-deb http://download.opensuse.org/repositories/devel:/kubic:/libcontainers:/stable:/cri-o:/$VERSION/$OS/ /
-EOF
+#cat <<EOF | sudo tee /etc/apt/sources.list.d/devel:kubic:libcontainers:stable.list
+#deb https://download.opensuse.org/repositories/devel:/kubic:/libcontainers:/stable/$OS/ /
+#EOF
+#cat <<EOF | sudo tee /etc/apt/sources.list.d/devel:kubic:libcontainers:stable:cri-o:$VERSION.list
+#deb http://download.opensuse.org/repositories/devel:/kubic:/libcontainers:/stable:/cri-o:/$VERSION/$OS/ /
+#EOF
+#
+#curl -L https://download.opensuse.org/repositories/devel:/kubic:/libcontainers:/stable:/cri-o:/$VERSION/$OS/Release.key | sudo apt-key --keyring /etc/apt/trusted.gpg.d/libcontainers.gpg add -
+#curl -L https://download.opensuse.org/repositories/devel:/kubic:/libcontainers:/stable/$OS/Release.key | sudo apt-key --keyring /etc/apt/trusted.gpg.d/libcontainers.gpg add -
+#
+sudo apt update -y
+sudo apt install -y containerd=$CONTAINERD_VERSION
+#sudo apt-get install cri-o cri-o-runc -y
+sudo mkdir -p /etc/containerd/
+containerd config default | sed -e 's/^\(\s*\)SystemdCgroup.*$/\1SystemdCgroup = true/g' | sudo tee /etc/containerd/config.toml
 
-curl -L https://download.opensuse.org/repositories/devel:/kubic:/libcontainers:/stable:/cri-o:/$VERSION/$OS/Release.key | sudo apt-key --keyring /etc/apt/trusted.gpg.d/libcontainers.gpg add -
-curl -L https://download.opensuse.org/repositories/devel:/kubic:/libcontainers:/stable/$OS/Release.key | sudo apt-key --keyring /etc/apt/trusted.gpg.d/libcontainers.gpg add -
-
-sudo apt-get update
-sudo apt-get install cri-o cri-o-runc -y
-
-cat >> /etc/default/crio << EOF
-${ENVIRONMENT}
-EOF
-sudo systemctl daemon-reload
-sudo systemctl enable crio --now
+sudo systemctl restart containerd
 
 echo "CRI runtime installed successfully"
 
@@ -78,6 +77,6 @@ sudo apt-get install -y jq
 
 local_ip="$(ip --json a s | jq -r '.[] | if .ifname == "eth1" then .addr_info[] | if .family == "inet" then .local else empty end else empty end')"
 cat > /etc/default/kubelet << EOF
-KUBELET_EXTRA_ARGS=--node-ip=$local_ip
+KUBELET_EXTRA_ARGS=--node-ip=$local_ip --seccomp-default
 ${ENVIRONMENT}
 EOF
