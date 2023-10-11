@@ -22,17 +22,18 @@ nodes:
     cap: 20 # Set the Maximum Amount of Physical CPU Time Used by a Virtual CPU
     memory: 4096 # In MB
   workers:
-    count: 1
+    count: 3
     cpu: 6
     cap: 20
     memory: 4096
 # Mount additional shared folders from the host into each virtual machine.
 # Note that the project directory is automatically mounted at /vagrant.
-# shared_folders:
-#   - host_path: ../images
-#     vm_path: /vagrant/images
+#  shared_folders:
+#    - host_path: "."
+#      vm_path: "/vagrant"
 software:
-  box: bento/ubuntu-22.04
+#  box: bento/ubuntu-22.04
+  box: generic/ubuntu2204
   cilium: 1.14.2
   containerd: 1.7.2-0ubuntu1~22.04.1
   # To skip the dashboard installation, set its version to an empty value or comment it out:

@@ -23,7 +23,8 @@ Vagrant.configure("2") do |config|
   else
     config.vm.box = settings["software"]["box"]
   end
-  config.vm.box_check_update = true
+  config.vm.box_check_update = false
+  config.vm.synced_folder ".", "/vagrant", create: true
 
   config.vm.define "master" do |master|
     master.vm.hostname = "master-node"
@@ -70,15 +71,14 @@ Vagrant.configure("2") do |config|
   end
 
   (1..NUM_WORKER_NODES).each do |i|
-
     config.vm.define "node0#{i}" do |node|
       node.vm.hostname = "worker-node0#{i}"
       node.vm.network "private_network", ip: IP_NW + "#{IP_START + i}"
-      config.vm.disk :disk, name: "disk0", size: "10GB"
-      config.vm.disk :disk, name: "disk1", size: "10GB"
+      node.vm.disk :disk, name: "disk_#{i}_0", size: "10GB"
+      node.vm.disk :disk, name: "disk_#{i}_1", size: "10GB"
       if settings["shared_folders"]
         settings["shared_folders"].each do |shared_folder|
-          node.vm.synced_folder shared_folder["host_path"], shared_folder["vm_path"]
+          node.vm.synced_folder shared_folder["host_path"], shared_folder["vm_path"], create: true
         end
       end
       node.vm.provider "virtualbox" do |vb|
@@ -113,6 +113,5 @@ Vagrant.configure("2") do |config|
         node.vm.provision "shell", path: "scripts/dashboard.sh"
       end
     end
-
   end
 end 
